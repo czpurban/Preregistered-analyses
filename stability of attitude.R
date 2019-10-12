@@ -78,6 +78,15 @@ model1 <- glmer(change~ (1|id) + (1|item) +
 summary(model1)
 #pořád problémy se singularitou
 
+#vlastně asi nejdůležitější je vyřešit, proč toto hází singularitu: 
+model1 <- glmer(change~ (1|item), 
+                data = prepostData, family = binomial(link = "logit"), 
+                glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e5)))
+summary(model1)
+table (prepostData$change, prepostData$item) # se zdá být OK, jednoltivé, položky jsou dobře manipulované;
+#kvůli té singularitě je var. pro náhodné intercepty 0, jako kdyby nevariovala, ale ona musí variovat, ne?
+
+
 model1 <- glmer(change~ (1|id) +
                   + attitude.centr*manipulated.centr #tests H6
                 + manipulated.centr*behavioral.centr #tests H7
