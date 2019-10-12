@@ -18,6 +18,8 @@ while (i<201*48+1){
   i<-i+48
 }
 
+#sorting data: order of trial for each person
+posttestData<-posttestData[order(posttestData$id,posttestData$trial),]
 
 # Manipulating pretest and posttest data ------------------------------------
 pretestData$extreme<-ifelse(pretestData$response==1 | pretestData$response==6, 1, 0)
@@ -56,35 +58,35 @@ prepostData$change<-ifelse(prepostData$response.x==prepostData$response.y, 0, 1)
 model1 <- glmer(change~ (1 + manipulated.centr+behavioral.centr|id) + (1 + manipulated.centr|item) +
                 + attitude.centr*manipulated.centr #tests H6
                 + manipulated.centr*behavioral.centr #tests H7
-                #+ manipulated.centr*trial.centr # možná vyhodit?
+                #+ manipulated.centr*trial.centr # moÅ¾nÃ¡ vyhodit?
                 + manipulated.centr*experience.centr + male + extreme + central, 
                 data = prepostData, family = binomial(link = "logit"), 
                 glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e5)))
 summary(model1)
 edit(prepostData)
 
-#máme problém se singularitou; 
+#mÃ¡me problÃ©m se singularitou; 
 isSingular(model1, tol = 1e-05)
 
 model1 <- glmer(change~ (1|id) + (1|item) +
                   + attitude.centr*manipulated.centr #tests H6
                 + manipulated.centr*behavioral.centr #tests H7
-                #+ manipulated.centr*trial.centr # možná vyhodit?
+                #+ manipulated.centr*trial.centr # moÅ¾nÃ¡ vyhodit?
                 + manipulated.centr*experience.centr + male + extreme + central, 
                 data = prepostData, family = binomial(link = "logit"), 
                 glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e5)))
 summary(model1)
-#poøád problémy se singularitou
+#poÅ™Ã¡d problÃ©my se singularitou
 
 model1 <- glmer(change~ (1|id) +
                   + attitude.centr*manipulated.centr #tests H6
                 + manipulated.centr*behavioral.centr #tests H7
-                #+ manipulated.centr*trial.centr # možná vyhodit?
+                #+ manipulated.centr*trial.centr # moÅ¾nÃ¡ vyhodit?
                 + manipulated.centr*experience.centr + male + extreme + central, 
                 data = prepostData, family = binomial(link = "logit"), 
                 glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e5)))
 summary(model1)
-#tady už problém se singularitou není
+#tady uÅ¾ problÃ©m se singularitou nenÃ­
 
 
 summary(prepostData)
