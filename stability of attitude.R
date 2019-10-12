@@ -97,8 +97,11 @@ model1 <- glmer(change~ (1|id) +
 summary(model1)
 #tady už problém se singularitou není
 
-
-summary(prepostData)
+#asi opravdu problém v simulaci dat, když dám novou hodnotu položky, tak už funguje bez singularity: 
+prepostData$item<-sample(c(1:96), length(prepostData$item), replace=T) 
+model1 <- glmer(change~ (1|id)+(1|item), 
+                data = prepostData, family = binomial(link = "logit"), 
+                glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e5)))
 
 # where: 
 # id...participant identifier;
