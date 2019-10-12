@@ -83,7 +83,7 @@ model1 <- glmer(change~ (1|item),
                 data = prepostData, family = binomial(link = "logit"), 
                 glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e5)))
 summary(model1)
-table (prepostData$change, prepostData$item) # se zdá být OK, jednoltivé, položky jsou dobře manipulované;
+table (prepostData$change, prepostData$item) # se zdá být OK, u každé položky máme nějakou změnu;
 #kvůli té singularitě je var. pro náhodné intercepty 0, jako kdyby nevariovala, ale ona musí variovat, ne?
 
 
