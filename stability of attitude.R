@@ -1,25 +1,28 @@
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(car, lme4, dplyr)
 
+
+set.seed(111)
 # Simulating pretest and posttest data ------------------------------------
-pretestData<-data.frame(id = rep(1:201, each=96) , item = rep (1:96, 201), response =  sample(1:6, 201*96, replace=T), 
-                        attitude = rnorm(201*96,0,1.5), behavioral = rep(rep(0:1, each=48), 201))
-pretestData$male<-sample(c(0,1),201*96, replace = T)
+pretestData<-data.frame(id = rep(1:201, each=96) , item = rep (1:96, 201), 
+                        behavioral = rep(rep(0:1, each=48), 201),
+                        attitude = rep(rnorm(201, 0, 1.5), each = 96), 
+                        male = rep(sample(c(0,1),201, replace = T), each = 96),
+                        response =  sample(1:6, 201*96, replace=T)
+                        )
 
 
-posttestData<-data.frame(id = rep(1:201, each=48), 
-                         response =  sample(1:6, 201*48, replace=T) 
-                         )
+
+posttestData<-data.frame(id = rep(1:201, each=48), response =  sample(1:6, 201*48, replace=T))
+                                                  
 i<-1
 while (i<201*48+1){
-  posttestData$item[i:(i+47)] <- sample(1:96, 48, replace=F) 
-  posttestData$manipulated[i:(i+47)]<-sample(c(rep(0,42), rep(1,6)), replace = F)
+  posttestData$item[i:(i+47)] <- c(sample(1:48, 24, replace=F),sample(49:96, 24, replace=F))
+  posttestData$manipulated[i:(i+47)]<-c(sample(c(rep(0,21),rep(1,3)), 24, replace=F),
+                                        sample(c(rep(0,21),rep(1,3)), 24, replace=F))
   posttestData$trial[i:(i+47)] <- sample(c(1:48),48,replace=F) 
   i<-i+48
 }
-
-#sorting data: order of trial for each person
-posttestData<-posttestData[order(posttestData$id,posttestData$trial),]
 
 # Manipulating pretest and posttest data ------------------------------------
 pretestData$extreme<-ifelse(pretestData$response==1 | pretestData$response==6, 1, 0)
@@ -51,10 +54,22 @@ prepostData$behavioral.centr<-as.numeric(scale(prepostData$behavioral, center=T,
 prepostData$trial.centr<-as.numeric(scale(prepostData$trial/48, center=T, scale=F))
 
 #DV
-prepostData$change<-ifelse(prepostData$response.x==prepostData$response.y, 0, 1)
+# prepostData$change<-ifelse(prepostData$response.x==prepostData$response.y, 0, 1)
+prepostData$change<-NA
+prepostData$score<-(10+prepostData$manipulated.centr*4+prepostData$behavioral+prepostData$attitude+
+                    abs(123.5-prepostData$id)/201+ #efekty lidí nejsou jejich id
+                    prepostData$item+prepostData$male+
+                    abs(prepostData$trial-19.3)/48+ #efekty položek nejsou jejich identifikátory
+                    prepostData$experience/6+prepostData$extreme+
+                    prepostData$central)/700
+for (i in 1:length(prepostData[,1])) {
+prepostData$change[i]<-rbinom(1,1,prepostData$score[i])}
+
+table(prepostData$change)
 
 # Analysis  ------------------------------------
 
+#toto je kompletní model, který ale dává singularitu
 model1 <- glmer(change~ (1 + manipulated.centr+behavioral.centr|id) + (1 + manipulated.centr|item) +
                 + attitude.centr*manipulated.centr #tests H6
                 + manipulated.centr*behavioral.centr #tests H7
@@ -63,45 +78,20 @@ model1 <- glmer(change~ (1 + manipulated.centr+behavioral.centr|id) + (1 + manip
                 data = prepostData, family = binomial(link = "logit"), 
                 glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e5)))
 summary(model1)
-edit(prepostData)
 
-#máme problém se singularitou; 
-isSingular(model1, tol = 1e-05)
-
-model1 <- glmer(change~ (1|id) + (1|item) +
-                  + attitude.centr*manipulated.centr #tests H6
+#toto je nejlepší model, který nehází singularitu
+model1 <- glmer(change ~ (1 |id) + (1 + manipulated |item)
+                + attitude.centr*manipulated.centr #tests H6
                 + manipulated.centr*behavioral.centr #tests H7
-                #+ manipulated.centr*trial.centr # možná vyhodit?
-                + manipulated.centr*experience.centr + male + extreme + central, 
-                data = prepostData, family = binomial(link = "logit"), 
+                + manipulated.centr*trial.centr # možná vyhodit?
+                + manipulated.centr*experience.centr 
+                + male 
+                + extreme 
+                + central
+                , data = prepostData, family = binomial(link = "logit"), 
                 glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e5)))
 summary(model1)
-#pořád problémy se singularitou
 
-#vlastně asi nejdůležitější je vyřešit, proč toto hází singularitu: 
-model1 <- glmer(change~ (1|item), 
-                data = prepostData, family = binomial(link = "logit"), 
-                glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e5)))
-summary(model1)
-table (prepostData$change, prepostData$item) # se zdá být OK, u každé položky máme nějakou změnu;
-#kvůli té singularitě je var. pro náhodné intercepty 0, jako kdyby nevariovala, ale ona musí variovat, ne?
-
-
-model1 <- glmer(change~ (1|id) +
-                  + attitude.centr*manipulated.centr #tests H6
-                + manipulated.centr*behavioral.centr #tests H7
-                #+ manipulated.centr*trial.centr # možná vyhodit?
-                + manipulated.centr*experience.centr + male + extreme + central, 
-                data = prepostData, family = binomial(link = "logit"), 
-                glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e5)))
-summary(model1)
-#tady už problém se singularitou není
-
-#asi opravdu problém v simulaci dat, když dám novou hodnotu položky, tak už funguje bez singularity: 
-prepostData$item<-sample(c(1:96), length(prepostData$item), replace=T) 
-model1 <- glmer(change~ (1|id)+(1|item), 
-                data = prepostData, family = binomial(link = "logit"), 
-                glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e5)))
 
 # where: 
 # id...participant identifier;
