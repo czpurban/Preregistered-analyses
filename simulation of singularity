@@ -1,0 +1,41 @@
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(car, lme4, dplyr)
+
+threshold<-seq.int(0.5, 0.98, length.out = 10)
+PropSingRes<-numeric(length(threshold))
+N<- 201 #sample size
+
+#j<-1
+for (j in 1:10) {
+    singular<-numeric(50)
+    for (k in 1:50) {
+      #simulating data
+      data<-data.frame(id = rep(1:N, each=48), response =  sample(1:6, N*48, replace=T))
+
+      i<-1
+      while (i<N*48+1){
+        data$item[i:(i+47)] <- c(sample(1:48, 24, replace=F),sample(49:96, 24, replace=F))
+        data$manipulated[i:(i+47)]<-c(sample(c(rep(0,21),rep(1,3)), 24, replace=F),
+                                              sample(c(rep(0,21),rep(1,3)), 24, replace=F))
+        data$trial[i:(i+47)] <- sample(c(1:48),48,replace=F) 
+        i<-i+48
+      }
+      data$change<-as.factor(runif(length(data[,1]), 0,1)>threshold[j])
+      #setting the proportion of zeros in the DV
+      
+      #running the model
+      model1 <- glmer(change~ (1|item), 
+                      data = data, family = binomial(link = "logit"), 
+                      glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e5)))
+      
+      #checking for singularity in th eresult
+      singular[k]<-isSingular(model1, tol = 1e-05)
+      print(k)}
+    PropSingRes[j]<-mean(singular)
+}
+
+
+plot(threshold, PropSingRes, ylim=c(0,1), type="l",
+     xlab = "Proportion of zeros in DV",
+    ylab = "Proportion of singular results", main= paste("Sample size = ", N))
+
