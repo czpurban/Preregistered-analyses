@@ -91,22 +91,35 @@ model1 <- glmer(extremePerc ~ (1 + manipUp.centr + manipDown.centr + behavioral.
                 + attitude.centr
                 + manipUp.centr * accepted.centr
                 + manipDown.centr * accepted.centr
-                + male + trial + experience.centr, 
+                + male + experience.centr, 
                 data = data, family = binomial(link = "logit"), 
                 glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e5)))
 summary(model1)
 
-# tenhle model není úplně správně (response1 je jako spojitá proměnná) 
+# tenhle model není úplně správně (response1 je jako spojitá proměnná), také trvá hodně dlouho 
 model2 <- glmer(extremePerc ~ (1 + manipUp.centr + manipDown.centr + behavioral.centr | id) 
                 + (1 + response1 + manipUp.centr + manipDown.centr | item)
                 + response1
                 + attitude.centr
                 + manipUp.centr * accepted.centr
                 + manipDown.centr * accepted.centr
-                + male + trial + experience.centr, 
+                + male + experience.centr, 
                 data = data, family = binomial(link = "logit"), 
                 glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e5)))
 summary(model2)
+
+#nějaký redukovaný model, který zkouším...
+model3 <- glmer(extremePerc ~ (1 + manipUp.centr + manipDown.centr + behavioral.centr  | id) 
+                + (1 | item)
+                + response1
+                + attitude.centr
+                + manipUp.centr * accepted.centr
+                + manipDown.centr * accepted.centr                 
+                + male + experience.centr, 
+                data = data, family = binomial(link = "logit"), 
+                glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e5)))
+summary(model3)
+
 
 
 # where: 
