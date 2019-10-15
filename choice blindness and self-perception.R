@@ -108,9 +108,9 @@ model2 <- glmer(extremePerc ~ (1 + manipUp.centr + manipDown.centr + behavioral.
                 glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e5)))
 summary(model2)
 
-#nějaký redukovaný model, který zkouším...
+#nějaký redukovaný model, který zkouším. Trvá dlouho, ale funguje.
 model3 <- glmer(extremePerc ~ (1 + manipUp.centr + manipDown.centr + behavioral.centr  | id) 
-                + (1 | item)
+                + (1 + response1 + manipUp.centr + manipDown.centr | item)
                 + response1
                 + attitude.centr
                 + manipUp.centr * accepted.centr
