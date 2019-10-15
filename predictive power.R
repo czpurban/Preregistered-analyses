@@ -1,6 +1,3 @@
-# Testing and comparing predictive power of environmental attitude
-# measured with evaluative items (attitude 1) and behavioral items (attitude 2).
-
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(car, lme4, boot)
 
@@ -32,44 +29,47 @@ edit(productData)
 # We first look at whether attitude 1 and attitude 2 predict 
 # choice of green products
 
-model1 <- glmer(greenChoice ~ (1 | id) + (1 | greenProduct/pair)
-                          + trial + greenLeft + male
-                          + attitude1,
+model1 <- glmer(greenChoice ~ (1 + greenLeft | id) + (1 + attitude1 | greenProduct/pair)
+                + trial + greenLeft + male + attitude1,
                 data = productData, family = binomial(link = "logit"), 
                 glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e5)))
 summary(model1)
 
-model2 <- glmer(greenChoice ~ (1 | id) + (1 | greenProduct/pair)
-                + trial + greenLeft + male
-                + attitude2,
+model2 <- glmer(greenChoice ~ (1 + greenLeft | id) + (1 + attitude2 | greenProduct/pair)
+                + trial + greenLeft + male + attitude2,
                 data = productData, family = binomial(link = "logit"), 
                 glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e5)))
 summary(model2)
-
 
 # To test whether attitude 1 and attitude 2 have similar effect on 
 # proenvironmental behavior, we test the equality of beta weights for attitude1 and attitude2.
 # We get SE for their difference using bootstrap (see also:
 #https://stackoverflow.com/questions/40952679/r-testing-equivalence-of-coefficients-in-multivariate-multiple-regression)
 
-b_b <- function(dataset, indices) {
-  data<-dataset[indices,]
-  model1 <- glmer(greenChoice ~ (1 | id) + (1 | greenProduct/pair)
+b_b <- function(data, indices) {
+  productData<-data[indices,]
+  model1 <- glmer(greenChoice ~ (1 + greenLeft | id) + (1 + attitude1 | greenProduct/pair)
                   + trial + greenLeft + male + attitude1,
-                  data = data, family = binomial(link = "logit"), 
+                  data = productData, family = binomial(link = "logit"), 
                   glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e5)))
   
-  model2 <- glmer(greenChoice ~ (1 | id) + (1 | greenProduct/pair)
+  model2 <- glmer(greenChoice ~ (1 + greenLeft | id) + (1 + attitude2 | greenProduct/pair)
                   + trial + greenLeft + male + attitude2,
-                  data = data, family = binomial(link = "logit"), 
+                  data = productData, family = binomial(link = "logit"), 
                   glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e5)))
   
   return(fixef(model1)[5] - fixef(model2)[5])
 }
-# with 1000 resamplings, this model will run for 18 hours on my notebook (i5-8265U CPU, 1.6 GHz, 16 GB RAM)
-# the number of resamplings, R, has to be set to at least 1000
-
+# this will take soooome time on my notebook (one day maybe)
+# would be better to use a virtual machine
+# we should set number of resamplings, R, to at least 1000
+time1<-Sys.time()
 results <- boot(data=productData, statistic=b_b, R=10)
 results
+time2<-Sys.time()
+time1-time2
+
+# with 1000 resamplings, this model will run for 150 hours on my notebook (i5-8265U CPU, 1.6 GHz, 16 GB RAM)
+# the number of resamplings, R, has to be set to at least 1000
 
 
