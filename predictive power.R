@@ -66,9 +66,8 @@ b_b <- function(dataset, indices) {
   
   return(fixef(model1)[5] - fixef(model2)[5])
 }
-# this will take soooome time on my notebook (one day maybe)
-# would be better to use a virtual machine
-# we should set number of resamplings, R, to at least 1000
+# with 1000 resamplings, this model will run for 18 hours on my notebook (i5-8265U CPU, 1.6 GHz, 16 GB RAM)
+# the number of resamplings, R, has to be set to at least 1000
 
 results <- boot(data=productData, statistic=b_b, R=10)
 results
