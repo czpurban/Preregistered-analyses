@@ -51,17 +51,17 @@ data$manipContrast<-ifelse (data$manipulated==0, 0, data$manipContrast)
 cor(data)>0.7 #checking correlations between IVs 
 
 #centering of variables that enter interactions
-data$attitude.centr<-as.numeric(scale(data$attitude, center=T, scale=F))
-# data$manipulated.centr<-as.numeric(scale(data$manipulated, center=T, scale=F))
-data$experience.centr<-as.numeric(scale(data$experience/6, center=T, scale=F)) #scaling
-data$behavioral.centr<-as.numeric(scale(data$behavioral, center=T, scale=F))
-data$trial.centr<-as.numeric(scale(data$trial/48, center=T, scale=F))
-# data$manipUp.centr<-as.numeric(scale(data$manipUp, center=T, scale=F))
-# data$manipDown.centr<-as.numeric(scale(data$manipDown, center=T, scale=F))
-# data$accepted.centr<-as.numeric(scale(data$accepted, center=T, scale=F))
+data$attitudeCentered<-as.numeric(scale(data$attitude, center=T, scale=F))
+# data$manipulatedCentered<-as.numeric(scale(data$manipulated, center=T, scale=F))
+data$experienceCentered<-as.numeric(scale(data$experience/6, center=T, scale=F)) #scaling
+data$behavioralCentered<-as.numeric(scale(data$behavioral, center=T, scale=F))
+data$trialCentered<-as.numeric(scale(data$trial/48, center=T, scale=F))
+# data$manipUpCentered<-as.numeric(scale(data$manipUp, center=T, scale=F))
+# data$manipDownCentered<-as.numeric(scale(data$manipDown, center=T, scale=F))
+# data$acceptedCentered<-as.numeric(scale(data$accepted, center=T, scale=F))
 data$response1ZeroSum<-as.factor(data$response1)
 contrasts(data$response1ZeroSum) = contr.sum(6)
-data$response1LinContr <- data$response1-3
+data$response1Contrast <- data$response1-3
 
 #DV
 # data$change<-ifelse(data$response.x==data$response.y, 0, 1)
@@ -71,14 +71,14 @@ data$score <-
     data$item/96 +
     data$behavioral + 
     data$attitude +
-    # data$manipUp.centr - 
-    # data$manipDown.centr + 
-    # data$behavioral.centr +
+    # data$manipUpCentered - 
+    # data$manipDownCentered + 
+    # data$behavioralCentered +
     data$manipContrast +
     data$attitude +
     data$male +
     data$trial/48 +
-    data$experience.centr/6 +
+    data$experienceCentered/6 +
     data$response1/6
 
 fivenum(data$score)
@@ -92,9 +92,9 @@ data$extremePerc<-rbinom(48*201,1, prob = 0.5+data$score/120)
 model1 <- glmer(extremePerc ~ (1 + manipContrast | id) 
                 + (1 + response1ZeroSum + manipContrast | item)
                 + response1ZeroSum
-                + attitude.centr
+                + attitudeCentered
                 + manipContrast
-                + male + experience.centr, 
+                + male + experienceCentered, 
                 data = data, family = binomial(link = "logit"), 
                 glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e5)))
 summary(model1)
@@ -103,20 +103,20 @@ summary(model1)
 model2 <- glmer(extremePerc ~ (1 + manipContrast | id) 
                 + (1 + response1 + manipContrast | item)
                 + response1
-                + attitude.centr
+                + attitudeCentered
                 + manipContrast
-                + male + experience.centr, 
+                + male + experienceCentered, 
                 data = data, family = binomial(link = "logit"), 
                 glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e5)))
 summary(model2)
 
 # model s lineárními kontrasty pro response1
 model3 <- glmer(extremePerc ~ (1 + manipContrast | id) 
-                + (1 + response1LinContr + manipContrast | item)
-                + response1LinContr
-                + attitude.centr
+                + (1 + response1Contrast + manipContrast | item)
+                + response1Contrast
+                + attitudeCentered
                 + manipContrast
-                + male + experience.centr, 
+                + male + experienceCentered, 
                 data = data, family = binomial(link = "logit"), 
                 glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e5)))
 summary(model3)
@@ -124,12 +124,14 @@ summary(model3)
 # where: 
 # id...participant identifier;
 # item...item identifiers;
-# response1.zeroSum... pretest response (1-6) recoded with sum-to-zero contrast coding;
+# manipContrast... linear contrasts for minipulation (-1 = downward manipulation; 0 = no manipulation;
+# 1 = upward manipulation);
+# response1ZeroSum... pretest response (1-6) recoded with sum-to-zero contrast coding;
 # response1.... pretest response (1-6);
-# response1LinContr...linear contrasts for pretest reponses (1=-3, 2 = -2, 3 = -1, 4 = 1
+# response1Contrast...linear contrasts for pretest reponses (1=-3, 2 = -2, 3 = -1, 4 = 1
 # 5 = 2, 6 = 3);
-# behavioral.centr...dummy indicator of behavioral items (centered);
-# attitude.centr...environmental attitude (from pretest; centered);
+# behavioralCentered...dummy indicator of behavioral items (centered);
+# attitudeCentered...environmental attitude (from pretest; centered);
 # male...dummy indicator of males; 
-# trial.centr...order of trial (order of trial divided by the total number of trials and centered);
-# experience.centr...number of trials that have been manipulated (number of trials divided by six and centered).
+# trialCentered...order of trial (order of trial divided by the total number of trials and centered);
+# experienceCentered...number of trials that have been manipulated (number of trials divided by six and centered).
