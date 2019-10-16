@@ -39,9 +39,11 @@ while (i <length (data[,1])+1) {
   }
 }
 
-data$manipUp<-ifelse (data$manipulated==1 & data$response1 < 4, 1, 0)
-data$manipDown<-ifelse (data$manipulated==1 & data$response1 >= 4, 1,0) 
-data$accepted<-rbinom(48*201, 1, prob = 0.8)  
+data$manipContrast<-NA
+data$manipContrast<-ifelse (data$manipulated==1 & data$response1 < 4, 1, data$manipContrast)
+data$manipContrast<-ifelse (data$manipulated==1 & data$response1 >= 4, -1, data$manipContrast)
+data$manipContrast<-ifelse (data$manipulated==0, 0, data$manipContrast)
+# data$accepted<-rbinom(48*201, 1, prob = 0.8)  
 
 #merging pre-post test data; keeping only pretest data that match posttest data
 #data<-merge (data, data, by.x = c("id", "item"), by.y = c("id", "item"), all.x=F, all.y=T)
@@ -50,15 +52,16 @@ cor(data)>0.7 #checking correlations between IVs
 
 #centering of variables that enter interactions
 data$attitude.centr<-as.numeric(scale(data$attitude, center=T, scale=F))
-data$manipulated.centr<-as.numeric(scale(data$manipulated, center=T, scale=F))
+# data$manipulated.centr<-as.numeric(scale(data$manipulated, center=T, scale=F))
 data$experience.centr<-as.numeric(scale(data$experience/6, center=T, scale=F)) #scaling
 data$behavioral.centr<-as.numeric(scale(data$behavioral, center=T, scale=F))
 data$trial.centr<-as.numeric(scale(data$trial/48, center=T, scale=F))
-data$manipUp.centr<-as.numeric(scale(data$manipUp, center=T, scale=F))
-data$manipDown.centr<-as.numeric(scale(data$manipDown, center=T, scale=F))
-data$accepted.centr<-as.numeric(scale(data$accepted, center=T, scale=F))
-data$response1.zeroSum<-as.factor(data$response1)
-contrasts(data$response1.zeroSum) = contr.sum(6)
+# data$manipUp.centr<-as.numeric(scale(data$manipUp, center=T, scale=F))
+# data$manipDown.centr<-as.numeric(scale(data$manipDown, center=T, scale=F))
+# data$accepted.centr<-as.numeric(scale(data$accepted, center=T, scale=F))
+data$response1ZeroSum<-as.factor(data$response1)
+contrasts(data$response1ZeroSum) = contr.sum(6)
+data$response1LinContr <- data$response1-3
 
 #DV
 # data$change<-ifelse(data$response.x==data$response.y, 0, 1)
@@ -68,9 +71,10 @@ data$score <-
     data$item/96 +
     data$behavioral + 
     data$attitude +
-    data$manipUp.centr - 
-    data$manipDown.centr + 
-    data$behavioral.centr +
+    # data$manipUp.centr - 
+    # data$manipDown.centr + 
+    # data$behavioral.centr +
+    data$manipContrast +
     data$attitude +
     data$male +
     data$trial/48 +
@@ -84,52 +88,46 @@ data$extremePerc<-rbinom(48*201,1, prob = 0.5+data$score/120)
 
 # Analysis  ------------------------------------
 
-# toto je asi správný model, který se mi odhaduje velmi pomalu 
-model1 <- glmer(extremePerc ~ (1 + manipUp.centr + manipDown.centr + behavioral.centr | id) 
-                + (1 + response1.sumScore + manipUp.centr + manipDown.centr | item)
-                + response1.sumScore
+# model se sum-to-zero kontrasty pro response1
+model1 <- glmer(extremePerc ~ (1 + manipContrast | id) 
+                + (1 + response1ZeroSum + manipContrast | item)
+                + response1ZeroSum
                 + attitude.centr
-                + manipUp.centr * accepted.centr
-                + manipDown.centr * accepted.centr
+                + manipContrast
                 + male + experience.centr, 
                 data = data, family = binomial(link = "logit"), 
                 glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e5)))
 summary(model1)
 
-# tenhle model není úplně správně (response1 je jako spojitá proměnná), také trvá hodně dlouho 
-model2 <- glmer(extremePerc ~ (1 + manipUp.centr + manipDown.centr + behavioral.centr | id) 
-                + (1 + response1 + manipUp.centr + manipDown.centr | item)
+# model s response1 jako spojitou proměnnou 
+model2 <- glmer(extremePerc ~ (1 + manipContrast | id) 
+                + (1 + response1 + manipContrast | item)
                 + response1
                 + attitude.centr
-                + manipUp.centr * accepted.centr
-                + manipDown.centr * accepted.centr
+                + manipContrast
                 + male + experience.centr, 
                 data = data, family = binomial(link = "logit"), 
                 glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e5)))
 summary(model2)
 
-#nějaký redukovaný model, který zkouším. Trvá dlouho, ale funguje.
-model3 <- glmer(extremePerc ~ (1 + manipUp.centr + manipDown.centr + behavioral.centr  | id) 
-                + (1 + response1 + manipUp.centr + manipDown.centr | item)
-                + response1
+# model s lineárními kontrasty pro response1
+model3 <- glmer(extremePerc ~ (1 + manipContrast | id) 
+                + (1 + response1LinContr + manipContrast | item)
+                + response1LinContr
                 + attitude.centr
-                + manipUp.centr * accepted.centr
-                + manipDown.centr * accepted.centr                 
+                + manipContrast
                 + male + experience.centr, 
                 data = data, family = binomial(link = "logit"), 
                 glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e5)))
 summary(model3)
-
-
 
 # where: 
 # id...participant identifier;
 # item...item identifiers;
 # response1.zeroSum... pretest response (1-6) recoded with sum-to-zero contrast coding;
 # response1.... pretest response (1-6);
-# manipUp.centered...dummy indicator of upward choice-blindeness manip. (centered);
-# manipDown.centered...dummy indicator of downward choice-blindeness manip. (centered);
-# accepted.centr...dummy indicator of whether the person accepted the value (i.e., did not change it)
+# response1LinContr...linear contrasts for pretest reponses (1=-3, 2 = -2, 3 = -1, 4 = 1
+# 5 = 2, 6 = 3);
 # behavioral.centr...dummy indicator of behavioral items (centered);
 # attitude.centr...environmental attitude (from pretest; centered);
 # male...dummy indicator of males; 
