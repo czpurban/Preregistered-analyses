@@ -1,3 +1,6 @@
+#-------------------------------------------------------------------
+#effect of information on perception of morality of immoral behavior
+#-------------------------------------------------------------------
 summary(model1.behavior)
 Cumulative Link Mixed Model fitted with the Laplace approximation
 
@@ -37,12 +40,56 @@ Celkem morální|Velmi morální      5.80245    0.34202  16.965
 > summary(model1.person)
 Cumulative Link Mixed Model fitted with the Laplace approximation
 
+#-------------------------------------------------------------------
+#effect of information on perception of morality of the person
+#-------------------------------------------------------------------
 formula: person ~ repeated.green + one.green + round + (1 | immoral) +  
     (1 | type.repeated.green) + (1 | type.one.green) + (1 + repeated.green +      one.green | id)
 data:    data
 
  link  threshold nobs logLik   AIC     niter       max.grad cond.H 
  logit flexible  1580 -2080.17 4194.33 1727(12574) 3.59e-03 5.8e+01
+ 
+#-------------------------------------------------------------------
+#effect of information on perception of envi. motivation of the person
+#-------------------------------------------------------------------
+ Cumulative Link Mixed Model fitted with the Laplace approximation
+
+formula: evaluation ~ repeated.green + one.green + round + (1 | immoral) +  
+    (1 | type.repeated.green) + (1 | type.one.green) + (1 + repeated.green +  
+    one.green | id)
+data:    data
+
+ link  threshold nobs logLik   AIC     niter      max.grad cond.H 
+ logit flexible  1583 -1831.18 3696.36 2000(8004) 1.05e-03 1.9e+03
+
+Random effects:
+ Groups              Name           Variance Std.Dev. Corr          
+ id                  (Intercept)    0.99117  0.9956                 
+                     repeated.green 0.25877  0.5087   -0.129        
+                     one.green      0.25052  0.5005   -0.218  0.996 
+ immoral             (Intercept)    0.07651  0.2766                 
+ type.one.green      (Intercept)    0.72754  0.8530                 
+ type.repeated.green (Intercept)    0.57327  0.7571                 
+Number of groups:  id 198,  immoral 54,  type.one.green 51,  type.repeated.green 51 
+
+Coefficients:
+               Estimate Std. Error z value Pr(>|z|)   
+repeated.green   2.2553     0.7757   2.907  0.00365 **
+one.green        1.8797     0.8704   2.160  0.03081 * 
+round           -0.0218     0.1827  -0.119  0.90500   
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Threshold coefficients:
+                                  Estimate Std. Error z value
+Silně negativní|Středně negativní  -4.7826     1.2033  -3.975
+Středně negativní|Spíše negativní  -2.7906     1.1564  -2.413
+Spíše negativní|Spíše pozitivní    -0.5572     1.1474  -0.486
+Spíše pozitivní|Středně pozitivní   2.7645     1.1509   2.402
+Středně pozitivní|Silně pozitivní   5.0020     1.1586   4.317
+(1 observation deleted due to missingness)
+> 
 
 Random effects:
  Groups              Name           Variance Std.Dev. Corr          
