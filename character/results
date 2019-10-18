@@ -1,0 +1,72 @@
+summary(model1.behavior)
+Cumulative Link Mixed Model fitted with the Laplace approximation
+
+formula: behavior ~ repeated.green + one.green + round + (1 | immoral) +  
+    (1 | type.repeated.green) + (1 | type.one.green) + (1 + repeated.green +      one.green | id)
+data:    data
+
+ link  threshold nobs logLik   AIC     niter      max.grad cond.H 
+ logit flexible  1580 -2058.16 4150.31 1854(7529) 2.43e-03 1.0e+02
+
+Random effects:
+ Groups              Name           Variance  Std.Dev. Corr          
+ id                  (Intercept)    0.6341566 0.79634                
+                     repeated.green 0.0119439 0.10929  -1.000        
+                     one.green      0.0005795 0.02407   1.000 -1.000 
+ immoral             (Intercept)    1.5824330 1.25795                
+ type.one.green      (Intercept)    0.0000000 0.00000                
+ type.repeated.green (Intercept)    0.0000000 0.00000                
+Number of groups:  id 198,  immoral 54,  type.one.green 51,  type.repeated.green 51 
+
+Coefficients:
+               Estimate Std. Error z value Pr(>|z|)    
+repeated.green -0.01181    0.09776  -0.121    0.904    
+one.green       0.12561    0.09762   1.287    0.198    
+round           0.99746    0.17213   5.795 6.84e-09 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Threshold coefficients:
+                                 Estimate Std. Error z value
+Velmi nemorální|Celkem nemorální -1.55589    0.20690  -7.520
+Celkem nemorální|Spíše nemorální  0.09467    0.20274   0.467
+Spíše nemorální|Spíše morální     2.65325    0.21681  12.237
+Spíše morální|Celkem morální      4.00328    0.24000  16.680
+Celkem morální|Velmi morální      5.80245    0.34202  16.965
+(4 observations deleted due to missingness)
+> summary(model1.person)
+Cumulative Link Mixed Model fitted with the Laplace approximation
+
+formula: person ~ repeated.green + one.green + round + (1 | immoral) +  
+    (1 | type.repeated.green) + (1 | type.one.green) + (1 + repeated.green +      one.green | id)
+data:    data
+
+ link  threshold nobs logLik   AIC     niter       max.grad cond.H 
+ logit flexible  1580 -2080.17 4194.33 1727(12574) 3.59e-03 5.8e+01
+
+Random effects:
+ Groups              Name           Variance Std.Dev. Corr          
+ id                  (Intercept)    2.4774   1.5740                 
+                     repeated.green 0.1847   0.4298    0.099        
+                     one.green      0.3028   0.5503   -0.161  0.966 
+ immoral             (Intercept)    0.8217   0.9064                 
+ type.one.green      (Intercept)    0.0000   0.0000                 
+ type.repeated.green (Intercept)    0.0000   0.0000                 
+Number of groups:  id 198,  immoral 54,  type.one.green 51,  type.repeated.green 51 
+
+Coefficients:
+               Estimate Std. Error z value Pr(>|z|)    
+repeated.green   0.3441     0.1036   3.323  0.00089 ***
+one.green        0.5149     0.1069   4.816 1.47e-06 ***
+round            0.2895     0.1745   1.659  0.09714 .  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Threshold coefficients:
+                                 Estimate Std. Error z value
+Velmi nemorální|Celkem nemorální  -4.3199     0.2535 -17.041
+Celkem nemorální|Spíše nemorální  -2.4797     0.2082 -11.911
+Spíše nemorální|Spíše morální     -0.4284     0.1920  -2.232
+Spíše morální|Celkem morální       2.1734     0.2020  10.761
+Celkem morální|Velmi morální       5.3602     0.2719  19.713
+(4 observations deleted due to missingness)
